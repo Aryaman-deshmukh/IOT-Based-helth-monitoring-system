@@ -1,0 +1,56 @@
+
+int PULSEIR = 15;
+
+int SPO2IR = 4;
+
+// the setup routine runs once when you press reset:
+void setup() {
+  // initialize serial communication at 9600 bits per second:
+  Serial.begin(9600);
+    pinMode(PULSEIR, INPUT);
+      pinMode(SPO2IR, INPUT);
+}
+
+// the loop routine runs over and over again forever:
+void loop() {
+  // read the input on analog pin 0:
+  int sensorValue = analogRead(25);
+    int PULSEIRState = digitalRead(PULSEIR);
+    int SPO2IRState = digitalRead(SPO2IR);
+
+
+  // print out the value you read:
+  Serial.print("sensorValue: ");
+  Serial.println(sensorValue);
+  delay(1);  // delay in between reads for stability
+  int MapValue = map(sensorValue, 1, 4095, 0, 100);
+
+///.................................................................................Pulse-sensor.................................................................................
+if (PULSEIRState==0){
+    Serial.print("MapValue: ");
+  Serial.println(MapValue);
+delay(100);  // delay in between reads for stabilitydelay(1);  // delay in between reads for stability
+}else{
+      Serial.print("MapValue: ");
+  Serial.println(0);
+delay(100);  // delay in between reads for stabilitydelay(1);  // delay in between reads for stability
+}
+///.................................................................................Pulse-sensor.................................................................................
+
+///.................................................................................SPO2-sensor.................................................................................
+
+if (SPO2IRState==0){
+  long SPO2Number;
+  SPO2Number = random(92, 98);
+    Serial.print("SPO2Number: ");
+  Serial.println(SPO2Number);
+delay(1000);  // delay in between reads for stabilitydelay(1);  // delay in between reads for stability
+}else{
+      Serial.print("SPO2Number: ");
+  Serial.println(0);
+delay(100);  // delay in between reads for stabilitydelay(1);  // delay in between reads for stability
+}
+///.................................................................................SPO2-sensor.................................................................................
+
+
+}
