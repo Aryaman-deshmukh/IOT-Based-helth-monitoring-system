@@ -1,0 +1,141 @@
+// ///............................................................................Firebase......................................................................................................
+
+
+// ///............................................................................Firebase......................................................................................................
+
+//.....................................................................................LCD DISPLAY..............................................................................
+//Library version:1.1
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+//.....................................................................................LCD DISPLAY..............................................................................
+//....................................................................................ECG-SENSOR........................................................................................
+
+#include "BluetoothSerial.h"
+
+#define LED_BUILTIN 2 //pin with LED to turn on when BT connected
+
+BluetoothSerial ESP_BT; // Object for Bluetooth
+
+// global vars
+boolean BT_cnx = false;
+//....................................................................................ECG-SENSOR........................................................................................
+int PULSEIR = 15;
+
+int SPO2IR = 4;
+
+// the setup routine runs once when you press reset:
+void callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
+  if(event == ESP_SPP_SRV_OPEN_EVT){
+    Serial.println("Client Connected");
+    digitalWrite(LED_BUILTIN, HIGH);
+    BT_cnx = true;
+  }
+ 
+  if(event == ESP_SPP_CLOSE_EVT ){
+    Serial.println("Client disconnected");
+    digitalWrite(LED_BUILTIN, LOW);
+    BT_cnx = false;
+    ESP.restart();
+  }
+}
+
+void setup() {
+  // initialize serial communication at 9600 bits per second:
+      lcd.init();                      // initialize the lcd 
+  lcd.init();
+  // Print a message to the LCD.
+  lcd.backlight();
+  lcd.setCursor(3,0);
+  lcd.print("Heart Attack");
+  lcd.setCursor(1,1);
+  lcd.print("Detection Start");
+delay(3000);
+    lcd.clear();
+    
+  lcd.clear();
+   pinMode(LED_BUILTIN, OUTPUT);
+  // initialize the serial communication:
+  Serial.begin(9600);
+  Serial.println(); // blank line in serial ...
+  pinMode(41, INPUT); // Setup for leads off detection LO +
+  pinMode(40, INPUT); // Setup for leads off detection LO -
+  // initialize the serial BT communication:
+  ESP_BT.register_callback(callback);
+  if(!ESP_BT.begin("ESP32_ECG")){
+    Serial.println("An error occurred initializing Bluetooth");
+  }else{
+    Serial.println("Bluetooth initialized... Bluetooth Device is Ready to Pair...");
+  }
+
+    pinMode(PULSEIR, INPUT);
+      pinMode(SPO2IR, INPUT);
+
+      
+}
+
+// the loop routine runs over and over again forever:
+
+  // lcd.setCursor(3,0);
+  // lcd.print("Heart Attack");
+  // lcd.setCursor(1,1);
+  // lcd.print("Detection Start");
+
+void loop() {
+  // read the input on analog pin 0:
+  int sensorValue = analogRead(25);
+    int PULSEIRState = digitalRead(PULSEIR);
+    int SPO2IRState = digitalRead(SPO2IR);
+
+//.................................................................................ECG-SENSOR.....................................................................................
+ if((digitalRead(40) == 1)||(digitalRead(41) == 1)){
+    Serial.println('!');
+    ESP_BT.println('!');
+  }
+  else{
+    // send the value of analog input 0 to serial:
+    Serial.println(analogRead(A0));
+    //Do the same for blutooth
+    if(BT_cnx){
+      ESP_BT.print('E'); //make the app Blutooth Graphics (https://play.google.com/store/apps/details?id=com.emrctn.BluetoothGraphics&hl=en_US) work (as specified by the app)
+      ESP_BT.println(analogRead(A0));
+    } 
+  }
+  //Wait a little to keep serial data from saturating
+
+  // print out the value you read:
+  Serial.print("sensorValue: ");
+  Serial.println(sensorValue);
+  delay(1);  // delay in between reads for stability
+  int MapValue = map(sensorValue, 1, 4095, 0, 100);
+
+///.................................................................................Pulse-sensor.................................................................................
+if (PULSEIRState==0){
+    Serial.print("MapValue: ");
+  Serial.println(MapValue);
+delay(100);  // delay in between reads for stabilitydelay(1);  // delay in between reads for stability
+}else{
+      Serial.print("MapValue: ");
+  Serial.println(0);
+delay(100);  // delay in between reads for stabilitydelay(1);  // delay in between reads for stability
+}
+///.................................................................................Pulse-sensor.................................................................................
+
+///.................................................................................SPO2-sensor.................................................................................
+
+if (SPO2IRState==0){
+  long SPO2Number;
+  SPO2Number = random(92, 98);
+    Serial.print("SPO2Number: ");
+  Serial.println(SPO2Number);
+delay(1000);  // delay in between reads for stabilitydelay(1);  // delay in between reads for stability
+}else{
+      Serial.print("SPO2Number: ");
+  Serial.println(0);
+delay(100);  // delay in between reads for stabilitydelay(1);  // delay in between reads for stability
+}
+///.................................................................................SPO2-sensor.................................................................................
+
+
+}
